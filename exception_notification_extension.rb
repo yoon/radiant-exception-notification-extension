@@ -3,7 +3,7 @@ require_dependency 'application'
 class ExceptionNotificationExtension < Radiant::Extension
   version "1.0"
   description "Adds exception notification with Radiant-managed error pages"
-  url "https://code.digitalpulp.com"
+  url "http://github.com/digitalpulp"
   
   def activate
     ApplicationController.send :include, ExceptionNotification
