@@ -42,4 +42,12 @@ class ExceptionNotificationTest < Test::Unit::TestCase
     assert_response :error
   end
   
+  def test_500_internal_server_error_page_with_tags
+    # TODO
+    # set up an InternalServerError page with a body that has "<r:breadcrumbs/> or <r:url/> in it"
+    # status_500(nil) should raise an exception
+    # status_500 should no longer raise an exception
+    # status_500(@request) should not raise an exception
+  end
+
 end

@@ -14,9 +14,9 @@ module ExceptionNotification
   def rescue_action_in_public_with_notification(exception)
     case exception
     when ActiveRecord::RecordNotFound, ActionController::UnknownController, ActionController::UnknownAction, ActionController::RoutingError
-      status_404
+      status_404(request)
     else
-      status_500
+      status_500(request)
       ExceptionNotifier.deliver_notification(exception, self, request)
     end
   end
@@ -25,9 +25,9 @@ module ExceptionNotification
     unless Radiant::Config['debug?']
       case exception
         when ActiveRecord::RecordNotFound, ActionController::UnknownController, ActionController::UnknownAction, ActionController::RoutingError
-          status_404
+          status_404(request)
         else 
-          status_500
+          status_500(request)
           ExceptionNotifier.deliver_notification(exception, self, request)
       end
     else
@@ -37,15 +37,21 @@ module ExceptionNotification
   
   private
   
-  def status_404
+  def generic_request
+    g = ActionController::AbstractRequest.new
+    g.relative_url_root = "/"
+  end
+  def status_404(request = generic_request)
     headers["Status"] = "404 Not Found"
     page = Page.find_error_page(404)
+    page.request = request
     response.body = page.render
   end
   
-  def status_500
+  def status_500(request = generic_request)
     headers["Status"] = "500 Internal Server Error"
     page = Page.find_error_page(500)
+    page.request = request
     response.body = page.render
   end
   
