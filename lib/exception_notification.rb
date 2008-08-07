@@ -37,10 +37,6 @@ module ExceptionNotification
   
   private
   
-  def generic_request
-    g = ActionController::AbstractRequest.new
-    g.relative_url_root = "/"
-  end
   def status_404(request = generic_request)
     headers["Status"] = "404 Not Found"
     page = Page.find_error_page(404)
@@ -55,4 +51,9 @@ module ExceptionNotification
     response.body = page.render
   end
   
+  def generic_request
+    g = ActionController::AbstractRequest.new
+    g.relative_url_root = "/"
+  end
+
 end

@@ -12,6 +12,7 @@ class ExceptionNotificationTest < Test::Unit::TestCase
     @request = ActionController::TestRequest.new
     @response = ActionController::TestResponse.new
     ActionController::Base.consider_all_requests_local = false
+    ExceptionNotifier.stubs(:deliver_notification)
   end
   
   def teardown
@@ -26,7 +27,7 @@ class ExceptionNotificationTest < Test::Unit::TestCase
     exception = ActiveRecord::RecordNotFound.new
     ExceptionNotifier.expects(:deliver_notification).never
     @controller.expects(:show_page).raises(exception)
-    Page.expects(:find_error_page).with(404).returns(mock(:render => '404 template'))
+    Page.expects(:find_error_page).with(404).returns(mock(:render => '404 template', :request= => @request))
     @response.expects(:body=).with('404 template')
     get :show_page, :url => "/"
     assert_response :missing
@@ -36,18 +37,19 @@ class ExceptionNotificationTest < Test::Unit::TestCase
     exception = NoMethodError.new
     @controller.expects(:show_page).raises(exception)
     ExceptionNotifier.expects(:deliver_notification)
-    Page.expects(:find_error_page).with(500).returns(mock(:render => '500 template'))
+    Page.expects(:find_error_page).with(500).returns(mock(:render => '500 template', :request= => @request))
     @response.expects(:body=).with('500 template')
     get :show_page, :url => "/"
     assert_response :error
   end
   
-  def test_500_internal_server_error_page_with_tags
-    # TODO
-    # set up an InternalServerError page with a body that has "<r:breadcrumbs/> or <r:url/> in it"
-    # status_500(nil) should raise an exception
-    # status_500 should no longer raise an exception
-    # status_500(@request) should not raise an exception
+  def test_rendered_page_has_access_to_request
+    url = PagePart.new(:name => 'body', :content => '<r:url/>')
+    page = Page.new(:parts => [url], :slug => '/bogus-url')
+    @controller.expects(:show_page).raises(NoMethodError.new)
+    Page.stubs(:find_error_page).with(500).returns(page)
+    get :show_page
+    assert_match(/bogus-url/, @response.body)
   end
 
 end
